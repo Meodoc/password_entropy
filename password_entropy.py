@@ -13,33 +13,49 @@ CHARSET_SIZES = {
 def calc_entropy(l,r):
     return l*log2(r)
 
-def get_pool_size(p):
+def get_pool_info(p):
     has_lower = re.search("[a-z]", p)
     has_upper = re.search("[A-Z]", p)
     has_digit = re.search("[0-9]", p)
     has_symbols = re.search("[^a-zA-Z0-9]", p)
 
+    pool_names = set()
     charset_size = 0
     if has_lower:
         charset_size += CHARSET_SIZES["lower"]
+        pool_names.add("lowercase")
     if has_upper:
         charset_size += CHARSET_SIZES["upper"]
+        pool_names.add("uppercase")
     if has_digit:
         charset_size += CHARSET_SIZES["digit"]
+        pool_names.add("numbers")
     if has_symbols:
         charset_size += CHARSET_SIZES["symbols"]
+        pool_names.add("symbols")
 
-    return charset_size
+    if pool_names == {"numbers"}:
+        name = "numeric"
+    elif pool_names == {"lowercase", "uppercase"}:
+        name = "mixed case letters"
+    elif pool_names == {"lowercase", "uppercase", "numbers"}:
+        name = "alphanumeric"
+    elif pool_names == {"lowercase", "uppercase", "numbers", "symbols"}:
+        name = "alphanumeric + symbols"
+    else:
+        name = " + ".join(pool_names) if pool_names else "empty"
+
+    return charset_size, name
 
 def main(p):
     print(f"Calculating entropy for password '{p}'")
 
     l = len(p)
-    r = get_pool_size(p)
+    r,n = get_pool_info(p)
     e = calc_entropy(l,r)
 
     print(f"{'Password length:':<20} {l}")
-    print(f"{'Charset pool size:':<20} {r}")
+    print(f"{'Charset pool size:':<20} {r} ({n})")
     print(f"{'Entropy:':<20} {round(e, 3)}")
 
 if __name__ == "__main__":
